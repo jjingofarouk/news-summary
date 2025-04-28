@@ -3,5 +3,31 @@
 @tailwind utilities;
 
 ::selection {
-  background: #22c55a;
+  background: #6366f1;
+  color: white;
+}
+
+/* Dark mode selection */
+.dark ::selection {
+  background: #818cf8;
+  color: #1e293b;
+}
+
+@layer base {
+  body {
+    @apply transition-colors duration-300;
+  }
+}
+
+@layer utilities {
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
 }
