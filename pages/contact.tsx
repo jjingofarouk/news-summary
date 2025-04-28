@@ -121,7 +121,7 @@ const Contact: NextPage = () => {
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                       Drop us an email at{" "}
                       <a
-                        href="mailto:support@newssummarizer.com"
+                        href="mailto:jjingofaroukk@gmail.com"
                         className="text-indigo-600 dark:text-indigo-400 hover:underline"
                       >
                         support@newssummarizer.com
@@ -142,7 +142,7 @@ const Contact: NextPage = () => {
                         href="tel:+1-800-555-1234"
                         className="text-indigo-600 dark:text-indigo-400 hover:underline"
                       >
-                        +1 (800) 555-1234
+                        +256 (751) 360-385
                       </a>
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -155,9 +155,9 @@ const Contact: NextPage = () => {
                   <div>
                     <h3 className="text-sm font-semibold">Our Office</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      News Summarizer Headquarters<br />
-                      123 Innovation Drive, Suite 100<br />
-                      San Francisco, CA 94105, USA
+                      Shorter! Headquarters<br />
+                      123 High Street , Suite 100<br />
+                      Mbarara, Uganda
                     </p>
                   </div>
                 </div>
