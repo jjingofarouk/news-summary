@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 const Blog: NextPage = () => {
   return (
     <div className="dark:bg-slate-900 dark:text-gray-100 bg-gray-50 text-slate-900 min-h-screen transition-colors duration-300">
-      <div className "mx-auto flex min-h-screen max-w-5xl flex-col pt-8 sm:pt-12">
+      <div className="mx-auto flex min-h-screen max-w-5xl flex-col pt-8 sm:pt-12">
         <Head>
           <title>Blog - News Summarizer</title>
           <meta name="description" content="Read the latest updates and insights from News Summarizer" />
