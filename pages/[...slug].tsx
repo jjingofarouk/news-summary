@@ -19,7 +19,7 @@ export const Home: NextPage = () => {
   const [recentArticles, setRecentArticles] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [summaryLength, setSummaryLength] = useState<string>("medium");
-  const [savedArticles, setSavedArticles] = useState<{url: string, summary: string}[]>([]);
+  const [savedArticles, setSavedArticles] = useState<{ url: string, summary: string }[]>([]);
   const summaryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,13 +27,13 @@ export const Home: NextPage = () => {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setDarkMode(true);
     }
-    
+
     // Load saved articles from localStorage
     const saved = localStorage.getItem('savedArticles');
     if (saved) {
       setSavedArticles(JSON.parse(saved));
     }
-    
+
     // Load recent articles from localStorage
     const recent = localStorage.getItem('recentArticles');
     if (recent) {
@@ -42,28 +42,20 @@ export const Home: NextPage = () => {
   }, []);
 
   useEffect(() => {
-    if (
-      urlState &&
-      router.isReady &&
-      !curArticle &&
-      typeof urlState !== "string" &&
-      urlState.every((subslug: string) => typeof subslug === "string")
-    ) {
-      generateSummary(
-        "https://techcrunch.com/" + (urlState as string[]).join("/")
-      );
+    if (urlState && router.isReady && !curArticle && typeof urlState === "string") {
+      generateSummary(urlState);
     }
   }, [router.isReady, urlState]);
 
-  const curUrl = String(curArticle.split(".com")[1]);
-  
+  const curUrl = curArticle ? new URL(curArticle).pathname : "";
+
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
 
   const saveArticle = () => {
     if (!curArticle || !summary) return;
-    
+
     const newSavedArticles = [...savedArticles, { url: curArticle, summary }];
     setSavedArticles(newSavedArticles);
     localStorage.setItem('savedArticles', JSON.stringify(newSavedArticles));
@@ -72,14 +64,13 @@ export const Home: NextPage = () => {
 
   const shareArticle = () => {
     if (!curArticle) return;
-    
+
     if (navigator.share) {
       navigator.share({
         title: 'Article Summary',
         text: summary,
         url: curArticle,
-      })
-      .catch(() => {
+      }).catch(() => {
         copyToClipboard();
       });
     } else {
@@ -106,32 +97,32 @@ export const Home: NextPage = () => {
   const generateSummary = async (url?: string) => {
     setSummary("");
     const articleUrl = url ? url : curArticle;
-    
-    if (articleUrl) {
-      if (!articleUrl.includes("techcrunch.com")) {
-        toast.error("Please enter a valid TechCrunch article");
-        return;
-      }
-      setCurArticle(articleUrl);
-      addToRecentArticles(articleUrl);
-    } else {
-      if (!curArticle.includes("techcrunch.com")) {
-        toast.error("Please enter a valid TechCrunch article");
-        return;
-      }
-      router.replace(curUrl);
-      addToRecentArticles(curArticle);
+
+    if (!articleUrl) {
+      toast.error("Please enter a valid article URL");
+      return;
     }
-    
+
+    try {
+      // Basic URL validation
+      new URL(articleUrl);
+    } catch {
+      toast.error("Invalid URL format");
+      return;
+    }
+
+    setCurArticle(articleUrl);
+    addToRecentArticles(articleUrl);
+
     setLoading(true);
     const response = await fetch("/api/summarize", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         url: articleUrl,
-        length: summaryLength 
+        length: summaryLength,
       }),
     });
 
@@ -158,8 +149,7 @@ export const Home: NextPage = () => {
       setSummary((prev) => prev + chunkValue);
     }
     setLoading(false);
-    
-    // Scroll to summary when it's ready
+
     if (summaryRef.current) {
       setTimeout(() => {
         summaryRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -177,18 +167,20 @@ export const Home: NextPage = () => {
         </Head>
         <div className="flex justify-between items-center px-4">
           <Header />
-          <button 
+          <button
             onClick={toggleDarkMode}
             className="rounded-full p-2 bg-gray-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             aria-label="Toggle dark mode"
           >
-            {darkMode ? 
-              <SunIcon className="h-5 w-5" /> : 
-              <MoonIcon className="h-5 w-5" />
-            }
+            {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </button>
         </div>
         <main className="mx-auto mt-10 flex max-w-5xl flex-1 flex-col justify-center px-4 sm:mt-32">
+          <noscript>
+            <div className="text-center text-red-600 p-4">
+              JavaScript is required to use this app. Please enable JavaScript in your browser settings.
+            </div>
+          </noscript>
           <a
             target="_blank"
             rel="noreferrer"
@@ -209,17 +201,19 @@ export const Home: NextPage = () => {
             Copy and paste any <span className="text-indigo-600 dark:text-indigo-400">News </span>
             article link below.
           </p>
-          
+          <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
+            Note: Some privacy extensions may interfere with article fetching. If you encounter issues, try disabling them.
+          </p>
           <div className="relative mx-auto mt-10 w-full sm:w-3/4">
             <input
               type="text"
               value={curArticle}
               onChange={(e) => setCurArticle(e.target.value)}
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 outline-none focus:ring-2 focus:ring-indigo-500 pr-10"
-              placeholder="https://techcrunch.com/article-url"
+              placeholder="https://example.com/article-url"
             />
             {recentArticles.length > 0 && (
-              <button 
+              <button
                 onClick={() => setShowHistory(!showHistory)}
                 className="absolute right-3 top-3 text-slate-500"
                 aria-label="Show history"
@@ -242,7 +236,7 @@ export const Home: NextPage = () => {
                         }}
                         className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 truncate"
                       >
-                        {article.replace('https://techcrunch.com/', '')}
+                        {new URL(article).hostname.replace('www.', '')} - {new URL(article).pathname}
                       </button>
                     </li>
                   ))}
@@ -250,15 +244,14 @@ export const Home: NextPage = () => {
               </div>
             )}
           </div>
-          
           <div className="mx-auto mt-6 w-full sm:w-3/4">
             <p className="text-sm mb-2 text-slate-600 dark:text-slate-400">Summary Length:</p>
             <div className="flex space-x-2">
               <button
                 onClick={() => setSummaryLength("short")}
                 className={`px-4 py-1 rounded-full text-sm ${
-                  summaryLength === "short" 
-                    ? "bg-indigo-600 text-white" 
+                  summaryLength === "short"
+                    ? "bg-indigo-600 text-white"
                     : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                 }`}
               >
@@ -267,8 +260,8 @@ export const Home: NextPage = () => {
               <button
                 onClick={() => setSummaryLength("medium")}
                 className={`px-4 py-1 rounded-full text-sm ${
-                  summaryLength === "medium" 
-                    ? "bg-indigo-600 text-white" 
+                  summaryLength === "medium"
+                    ? "bg-indigo-600 text-white"
                     : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                 }`}
               >
@@ -277,8 +270,8 @@ export const Home: NextPage = () => {
               <button
                 onClick={() => setSummaryLength("long")}
                 className={`px-4 py-1 rounded-full text-sm ${
-                  summaryLength === "long" 
-                    ? "bg-indigo-600 text-white" 
+                  summaryLength === "long"
+                    ? "bg-indigo-600 text-white"
                     : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                 }`}
               >
@@ -286,7 +279,6 @@ export const Home: NextPage = () => {
               </button>
             </div>
           </div>
-          
           {!loading && (
             <button
               className="z-10 mx-auto mt-7 w-3/4 rounded-lg bg-indigo-600 p-3 text-lg font-medium text-white transition hover:bg-indigo-500 sm:mt-8 sm:w-1/3"
@@ -313,7 +305,7 @@ export const Home: NextPage = () => {
           <Toaster
             position="top-center"
             reverseOrder={false}
-            toastOptions={{ 
+            toastOptions={{
               duration: 2000,
               style: {
                 background: darkMode ? '#1e293b' : '#334155',
@@ -328,21 +320,21 @@ export const Home: NextPage = () => {
                   Summary
                 </h2>
                 <div className="flex space-x-4 mb-6">
-                  <button 
+                  <button
                     onClick={saveArticle}
                     className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                   >
                     <BookmarkIcon className="h-4 w-4" />
                     <span>Save</span>
                   </button>
-                  <button 
+                  <button
                     onClick={shareArticle}
                     className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                   >
                     <ShareIcon className="h-4 w-4" />
                     <span>Share</span>
                   </button>
-                  <button 
+                  <button
                     onClick={copyToClipboard}
                     className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                   >
@@ -361,11 +353,10 @@ export const Home: NextPage = () => {
                     </div>
                   ))}
                 </div>
-                
                 <div className="mt-8 flex justify-center">
-                  <a 
+                  <a
                     href={curArticle}
-                    target="_blank" 
+                    target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
@@ -375,7 +366,6 @@ export const Home: NextPage = () => {
               </div>
             </div>
           )}
-          
           {savedArticles.length > 0 && !summary && (
             <div className="mt-16 mb-10 px-4">
               <h3 className="text-xl font-bold mb-4 text-center">Your Saved Articles</h3>
@@ -383,7 +373,7 @@ export const Home: NextPage = () => {
                 {savedArticles.slice(0, 4).map((article, index) => (
                   <div key={index} className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm">
                     <h4 className="font-medium mb-2 truncate">
-                      {article.url.replace('https://techcrunch.com/', '')}
+                      {new URL(article.url).hostname.replace('www.', '')} - {new URL(article.url).pathname}
                     </h4>
                     <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3">
                       {article.summary.substring(0, 120)}...
